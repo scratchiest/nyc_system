@@ -2,6 +2,7 @@
 declare(strict_types = 1);
 session_start();
 require_once('../../vendor/autoload.php');
+require_once('../functions/GoogleAuthenticator.php');
 
 if (!isset($_SESSION['user_session'])) {
     header('location: ../../login.php');
@@ -12,7 +13,7 @@ if (isset($_SESSION['authenticated'])) {
 }
 
 $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
-$secret = "MKRXHCAXUGVGDYFI";
+$secret = getSecret();
 
 if (isset($_POST['authenticate'])) {
     $code = $_POST['code']; 

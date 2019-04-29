@@ -24,7 +24,6 @@ if (isset($_POST['login'])) {
         else {
             header('location: ../../index.php');
         }
-        
     }
     else {
         $_SESSION['error'] = "Account not found.";

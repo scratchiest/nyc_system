@@ -3,11 +3,16 @@ declare(strict_types = 1);
 session_start();
 require_once('../../includes/config/db.php');
 require_once('../../vendor/autoload.php');
+require_once('../functions/GoogleAuthenticator.php');
 
 $userData = $_SESSION['user_session'];
 
 $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
-$secret = "MKRXHCAXUGVGDYFI";
+$secret = getSecret();
+
+echo $secret;
+echo '</br>';
+echo $g->getCode($secret);
 
 if (isset($_POST['enable'])) {
     $code = $_POST['code'];

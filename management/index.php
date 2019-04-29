@@ -4,6 +4,7 @@ session_start();
 require_once('includes/config/session.php');
 require_once('../includes/config/db.php');
 require_once('vendor/autoload.php');
+require_once('includes/functions/GoogleAuthenticator.php');
 
 $userData = '';
 
@@ -39,8 +40,9 @@ if (isset($_GET['notpaid'])) {
 }
 
 // Google Authenticator Settings
-$secret = "MKRXHCAXUGVGDYFI";
+$secret = getSecret();
 $QRCode = \Sonata\GoogleAuthenticator\GoogleQrUrl::generate($userData[0]['username'], $secret, 'CESCon MS v2.0');
+$g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
 ?>
 <!DOCTYPE html>
 <html lang="en">
