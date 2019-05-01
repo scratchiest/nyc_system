@@ -107,6 +107,7 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
               ?>
               <li><a type="button" data-toggle="modal" data-target="#addUser">Add User</a></li>
               <?php } ?>
+              <li><a type="button" data-toggle="modal" data-target="#changepass">Change Password</a></li>
               <?php 
                 if ($userData[0]['2FA'] == 'ENABLED') {
               ?>
@@ -142,7 +143,6 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
               <h3 class="panel-title" style="text-align: center">List of Campers</h3>
             </div>
             <div class="panel-body">
-              <!-- <input type="text" id="myInput" style="margin-bottom: 1.5%" class="form-control" onkeyup="myFunction()" placeholder="Search for names.."> -->
               <table id="myTable" class="table table-striped table-hover">
                 <tbody id="campers-data">
                   <tr>
@@ -170,7 +170,7 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
         <form action="includes/action/register.php" method="POST">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <h4 class="modal-title" id="myModalLabel">Add User</h4>
+            <h4 class="modal-title text-center" id="myModalLabel">Add User</h4>
           </div>
           <div class="modal-body">
             <div class="form-group">
@@ -247,18 +247,22 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
 
   <div class="modal" id="success" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
-        <div class="modal-content">
+      <div class="modal-content">
         <div class="modal-header">
           <h4 class="modal-title text-center" id="myModalLabel">Information</h4>
         </div>
         <div class="modal-body">
             <?php 
               if (isset($_SESSION['2fa_success'])) {
-                echo "<h4 class='text-center' style='padding: 5px;'>".$_SESSION['2fa_success']."</h4>";
+                echo "<h4 class='text-center' style='line-height: 25px;'>".$_SESSION['2fa_success']."</h4>";
+              }
+
+              if (isset($_SESSION['changepass_success'])) {
+                echo "<h4 class='text-center' style='line-height: 25px;'>".$_SESSION['changepass_success']."</h4>";
               }
             ?>
         </div>
-        </div>
+      </div>
     </div>
   </div>
 
@@ -282,11 +286,57 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
     </div>
   </div>
 
+  <div class="modal fade" id="changepass" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <form action="includes/action/changepass.php" id="change" method="POST">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title text-center" id="myModalLabel">Change Password</h4>
+          </div>
+          <div class="modal-body">
+            <?php 
+              if (isset($_SESSION['changepass_failed'])) {
+                echo "<h5 class='alert alert-danger'>".$_SESSION['changepass_failed']."</h5>";
+              }
+            ?>
+            <div id="curr_warning" class="alert alert-warning text-center">
+              Current password is incorrect.
+            </div>
+            <div id="old_warning" class="alert alert-warning text-center">
+              <span id="old_message"></span>
+            </div>
+            <div id="conf_warning" class="alert alert-warning text-center">
+              <span id="conf_message"></span>
+            </div>
+            <div class="form-group">
+              <label>Current Password</label>
+              <input type="password" name="curr_password" id="curr_password" class="form-control" placeholder="Enter Current Password" required>
+            </div>
+            <div class="form-group">
+              <label>New Password</label>
+              <input type="password" name="new_password" id="new_password" class="form-control" placeholder="Enter New Password" required>
+            </div>
+            <div class="form-group">
+              <label>Confirm Password</label>
+              <input type="password" name="conf_password" id="conf_password" class="form-control" placeholder="Confirm Password" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary" name="changepass" id="allowsubmit" value="changepass">Change Password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <!-- Bootstrap core JavaScript
     ================================================== -->
   <!-- Placed at the end of the document so the pages load faster -->
   <script src="js/jquery-3.3.1.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
+  <script src="js/sha1.js"></script>
   <script>
     function loadCampers() {
       $.ajax({
@@ -317,29 +367,82 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
 
     loadCampers();
     loadCount();
+  </script>
+  <script>
+    var conf_warning = $('#conf_warning');
+    var conf_message = $('#conf_message');
+    var curr_warning = $('#curr_warning');
+    var old_warning = $('#old_warning');
+    var old_message = $('#old_message');
+    var allowsubmit = $('#allowsubmit');
 
-    // function myFunction() {
-    // // Declare variables 
-    //   var input, filter, table, tr, td, i, txtValue;
-    //   input = document.getElementById("myInput");
-    //   filter = input.value.toUpperCase();
-    //   table = document.getElementById("myTable");
-    //   tr = table.getElementsByTagName("tr");
+    allowsubmit.prop('disabled', true);
+    $('#new_password').prop('disabled', true);
+    $('#conf_password').prop('disabled', true);
+    conf_warning.hide();
+    old_warning.hide();
+    curr_warning.hide();
 
-    //   // Loop through all table rows, and hide those who don't match the search query
-    //   for (i = 0; i < tr.length; i++) {
-    //     td = tr[i].getElementsByTagName("td")[0];
-    //     if (td) {
-    //       txtValue = td.textContent || td.innerText;
-    //       if (txtValue.toUpperCase().indexOf(filter) > -1) {
-    //         tr[i].style.display = "";
-    //       } 
-    //       else {
-    //         tr[i].style.display = "none";
-    //       }
-    //     } 
-    //   }
-    // }
+    $('#curr_password').on('input', function() {
+      var curr_password = $('#curr_password').val();
+      
+      if (sha1(sha1(curr_password)) == '<?php echo $userData[0]['password']; ?>') {
+        $('#new_password').prop('disabled', false);
+        curr_warning.hide();
+      }
+      else {
+        $('#new_password').prop('disabled', true);
+        $('#conf_password').prop('disabled', true);
+        $('#new_password').prop('value', "");
+        $('#conf_password').prop('value', "");
+        conf_warning.hide();
+        old_warning.hide();
+        curr_warning.show();
+        allowsubmit.prop('disabled', true);
+      }
+    })
+
+    $('#new_password').on('input', function() {
+      var curr_password = $('#curr_password').val();
+      var new_password = $('#new_password').val();
+      var conf_password = $('#conf_password').val();
+
+      $('#conf_password').prop('value', "");
+
+      if (new_password == "") {
+        $('#conf_password').prop('disabled', true);
+        allowsubmit.prop('disabled', true);
+      }
+      else if (new_password == curr_password) {
+        old_message.text("New password can't be a current password.");
+        old_warning.show();
+        $('#conf_password').prop('disabled', true);
+        allowsubmit.prop('disabled', true);
+      }
+      else {
+        old_message.text("");
+        old_warning.hide();
+        $('#conf_password').prop('disabled', false);
+        allowsubmit.prop('disabled', true);
+      }
+    })
+
+    $('#conf_password').on('input', function() {
+      var curr_password = $('#curr_password').val();
+      var new_password = $('#new_password').val();
+      var conf_password = $('#conf_password').val();
+
+      if (conf_password != new_password) {
+        conf_message.text("Passwords doesn't match.");
+        conf_warning.show();
+        allowsubmit.prop('disabled', true);
+      }
+      else {
+        conf_message.text("");
+        conf_warning.hide();
+        allowsubmit.prop('disabled', false);
+      }
+    })
   </script>
   <?php 
     if (isset($_SESSION['2fa_success'])) {
@@ -351,7 +454,16 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
                 });
               </script>';
     }
-    unset($_SESSION['2fa_success']);
+
+    if (isset($_SESSION['changepass_success'])) {
+      echo   '<script>
+                $("#success").modal({
+                    show: true,
+                    backdrop: "static", 
+                    keyboard: false
+                });
+              </script>';
+    }
 
     if (isset($_SESSION['2fa_failed'])) {
       echo   '<script>
@@ -360,8 +472,16 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
                 });
               </script>';
     }
-
     unset($_SESSION['2fa_failed']);
+
+    if (isset($_SESSION['changepass_failed'])) {
+      echo   '<script>
+                $("#changepass").modal({
+                    show: true
+                });
+              </script>';
+    }
+    unset($_SESSION['changepass_failed']);
   ?>
 </body>
 </html>

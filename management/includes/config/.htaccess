@@ -1,0 +1,20 @@
+RewriteEngine On
+RewriteBase /
+
+<Files "db.php">  
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+<Files "session.php">  
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+<Files ".htaccess">  
+  Order Allow,Deny
+  Deny from all
+</Files>
+
+# Disable directory browsing
+Options All -Indexes

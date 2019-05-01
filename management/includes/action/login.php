@@ -6,7 +6,7 @@ $userData = array();
 
 if (isset($_POST['login'])) {
     $username = $_POST['username'];
-    $password = sha1(sha1($_POST['password'], true));
+    $password = sha1(sha1($_POST['password']));
 
     $query = "SELECT * FROM users WHERE username = ? AND password = ?";
     $stmt = $conn->prepare($query);
@@ -29,6 +29,9 @@ if (isset($_POST['login'])) {
         $_SESSION['error'] = "Account not found.";
         header('location: ../../login.php');
     }
+}
+else {
+    header('location: ../../login.php');
 }
 
 ?>

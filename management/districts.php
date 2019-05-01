@@ -12,6 +12,14 @@ else {
   $userData = $_SESSION['user_session'];
 }
 
+if (isset($_SESSION['2fa_success'])) {
+  header('location: index.php');
+}
+
+if (isset($_SESSION['changepass_success'])) {
+  header('location: index.php');
+}
+
 if ($userData[0]['2FA'] == 'ENABLED') {
   if (!isset($_SESSION['authenticated'])) {
     header('location: includes/action/authenticate.php');

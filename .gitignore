@@ -1,1 +1,3 @@
 management/vendor
+management/includes/config/.htaccess
+management/includes/functions/.htaccess

@@ -6,7 +6,7 @@ if(isset($_POST['register'])) {
     $lastname = $_POST['lastname'];
     $contactno = $_POST['contactno'];
     $username = $_POST['username'];
-    $password = sha1(sha1($_POST['password'], true));
+    $password = sha1(sha1($_POST['password']));
     $accesstype = $_POST['accesstype'];
 
 
@@ -19,6 +19,8 @@ if(isset($_POST['register'])) {
     else {
         echo $conn->error();
     }
-
+}
+else {
+    header('location: ../../index.php');
 }
 ?>

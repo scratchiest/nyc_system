@@ -1,7 +1,0 @@
-1. Create a database "nycdb2018"
-2. Import the nycdb2018.sql file to the database
-3. http://localhost/nyc/ <-- This is where the campers would register their information
-4. http://localhost/nyc/management/login.php <-- This is where the admin/staff manages the system
-5. Default credentials for administrator
-	username: admin
-	password: admin
