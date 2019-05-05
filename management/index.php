@@ -30,6 +30,16 @@ if (isset($_GET['paid'])) {
   }
 }
 
+// query all users, except admins
+$users = array();
+$query = "SELECT * FROM users WHERE accesstype = 'STAFF'";
+$result = $conn->query($query);
+if ($result->num_rows > 0) {
+  while ($row = $result->fetch_assoc()) {
+    $users[] = $row;
+  }
+}
+
 if (isset($_GET['notpaid'])) {
   $camper_id = $conn->real_escape_string($_GET['notpaid']);
 
@@ -103,9 +113,10 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
             </button>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
               <?php 
-                if ($userData[0]['accesstype'] == 2) {
+                if ($userData[0]['accesstype'] == 'ADMIN') {
               ?>
               <li><a type="button" data-toggle="modal" data-target="#addUser">Add User</a></li>
+              <li><a type="button" data-toggle="modal" data-target="#view_users">View Users</a></li>
               <?php } ?>
               <li><a type="button" data-toggle="modal" data-target="#changepass">Change Password</a></li>
               <?php 
@@ -163,53 +174,62 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
   </section>
   <!-- Modals -->
 
-  <!-- Add Page -->
+  <!-- Add User -->
   <div class="modal fade" id="addUser" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
-        <form action="includes/action/register.php" method="POST">
+        <form action="includes/action/register.php" id="add_user" method="POST">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
             <h4 class="modal-title text-center" id="myModalLabel">Add User</h4>
           </div>
           <div class="modal-body">
+            <?php 
+              if (isset($_SESSION['user_validation'])) {
+                foreach ($_SESSION['user_validation'] as $error) {
+                  echo '<div class="alert alert-danger">'.$error.'</div>';
+                }
+              }
+            ?>
             <div class="form-group">
               <label>Firstname</label>
-              <input type="text" name="firstname" class="form-control" placeholder="Enter Firstname" required>
+              <input type="text" name="firstname" id="firstname" class="form-control capitalize" minlength="2" placeholder="Enter Firstname" required>
             </div>
             <div class="form-group">
               <label>Lastname</label>
-              <input type="text" name="lastname" class="form-control" placeholder="Enter Lastname" required>
+              <input type="text" name="lastname" id="lastname" class="form-control capitalize" minlength="2" placeholder="Enter Lastname" required>
             </div>
-            <div class="form-group">
-              <label>Contact number</label>
-              <input type="number" name="contactno" class="form-control" placeholder="Enter Contact #" required>
+            <label>Contact number</label>
+            <div class="input-group" style="margin-bottom: 15px;">
+              <span class="input-group-addon" id="basic-addon1">+63</span>
+              <input type="number" name="contactno" id="contactno" class="form-control" required>
             </div>
             <div class="form-group">
               <label>Username</label>
-              <input type="text" name="username" class="form-control" placeholder="Enter Username" required>
+              <input type="text" name="username" id="username" class="form-control" minlength="6" placeholder="Enter Username" required>
             </div>
-            <div class="form-group">
+            <!-- <div class="form-group">
               <label>Password</label>
-              <input type="password" name="password" class="form-control" placeholder="Enter Password" required>
-            </div>
+              <input type="password" name="password" id="password" class="form-control" minlength="8" maxlength="20" placeholder="Enter Password" required>
+            </div> -->
             <div class="form-group">
               <label>Access type</label>
               <select name="accesstype" class="form-control" required>
-                <option value="1">Staff</option>
-                <option value="2">Admin</option>
+                <option value="STAFF">Staff</option>
+                <option value="ADMIN">Admin</option>
               </select>
             </div>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <button type="submit" class="btn btn-primary" name="register" value="register">Create User</button>
+            <button type="submit" class="btn btn-primary" name="register" id="register" value="register">Create User</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
+  <!-- Enable 2FA -->
   <div id="enable2fa" class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="classInfo" aria-hidden="true">
     <div class="modal-dialog" style="width: 46%;" role="document">
       <div class="modal-content">
@@ -245,6 +265,7 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
     </div>
   </div>
 
+  <!-- Success Messages -->
   <div class="modal" id="success" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -266,6 +287,7 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
     </div>
   </div>
 
+  <!-- Disable 2FA -->
   <div class="modal" id="disable2fa" tabindex="-1" role="dialog">
     <div class="modal-dialog" style="width: 30%;" role="document">
       <div class="modal-content">
@@ -297,7 +319,9 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
           <div class="modal-body">
             <?php 
               if (isset($_SESSION['changepass_failed'])) {
-                echo "<h5 class='alert alert-danger'>".$_SESSION['changepass_failed']."</h5>";
+                foreach ($_SESSION['changepass_failed'] as $error) {
+                  echo "<h5 class='alert alert-danger text-center'>".$error."</h5>";
+                }
               }
             ?>
             <div id="curr_warning" class="alert alert-warning text-center">
@@ -311,15 +335,17 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
             </div>
             <div class="form-group">
               <label>Current Password</label>
-              <input type="password" name="curr_password" id="curr_password" class="form-control" placeholder="Enter Current Password" required>
+              <input type="password" name="curr_password" id="curr_password" class="form-control" placeholder="Enter Current Password" autofocus required>
             </div>
             <div class="form-group">
               <label>New Password</label>
-              <input type="password" name="new_password" id="new_password" class="form-control" placeholder="Enter New Password" required>
+              <input type="password" name="new_password" pattern="(?=^.{8,}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s)[0-9a-zA-Z!@#$%^&*()]*$" id="new_password" minlength="8" class="form-control" placeholder="Enter New Password" required
+                title="Password must contain at least 1 uppercase, 1 lowercase, and 1 number."
+              >
             </div>
             <div class="form-group">
               <label>Confirm Password</label>
-              <input type="password" name="conf_password" id="conf_password" class="form-control" placeholder="Confirm Password" required>
+              <input type="password" name="conf_password" id="conf_password" minlength="8" class="form-control" placeholder="Confirm Password" required>
             </div>
           </div>
           <div class="modal-footer">
@@ -330,6 +356,101 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
       </div>
     </div>
   </div>
+
+  <div class="modal" id="user_success" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title text-center" id="myModalLabel">Information</h4>
+        </div>
+        <div class="modal-body">
+            <?php 
+              if (isset($_SESSION['user_success'])) {
+                echo "<h4 class='text-center' style='line-height: 25px;'>".$_SESSION['user_success']."</h4>";
+              }
+            ?>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Users -->
+  <div id="view_users" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="classInfo" aria-hidden="true">
+      <div class="modal-dialog modal-md">
+          <div class="modal-content">
+          <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+              ×
+              </button>
+              <h4 class="modal-title text-centers" id="classModalLabel">
+                  Users
+              </h4>
+          </div>
+          <div class="modal-body">
+              <?php 
+                if (isset($_SESSION['reset_failed'])) {
+                  echo '<div class="alert alert-danger text-center">'.$_SESSION['reset_failed'].'</div>';
+                }
+
+                if (isset($_SESSION['reset_success'])) {
+                  echo '<div class="alert alert-success text-center">'.$_SESSION['reset_success'].'</div>';
+                }
+              ?>
+              <table class="table table-bordered">
+              <tbody>
+                  <tr>
+                      <td><strong>User ID</strong></td>
+                      <td><strong>Name</strong></td>
+                      <td style="width: 1px;"><strong></strong></td>
+                      <td style="width: 1px;"><strong></strong></td>
+                  </tr>
+                  <?php 
+                  foreach($users as $list) {
+                      echo   '<tr>
+                                  <td>'.$list['user_id'].'</td>
+                                  <td>'.$list['firstname'].' '.$list['lastname'].'</td>
+                                  <td><a class="btn btn-warning" href="includes/action/reset.php?id='.$list['user_id'].'">Reset Password</a></td>
+                                  <td><a class="btn btn-danger" href="includes/action/delete.php?id='.$list['user_id'].'">Delete User</a></td>
+                              </tr>';
+                  }
+                  ?>
+              </tbody>
+              </table>
+          </div>
+          <div class="modal-footer">
+              <button type="button" class="btn btn-primary" data-dismiss="modal">
+              Close
+              </button>
+          </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- Password change warning -->
+  <!-- <div class="modal" id="default" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title text-center" id="myModalLabel">Information</h4>
+        </div>
+        <div class="modal-body">
+          <span id="warning">
+            <h4 style="line-height: 25px;" class="text-center">
+              Warning! Your password is set to default. 
+              <br>
+              It is highly recommended to change it as soon as possible.
+            </h4>
+          </span>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" style="margin-right: 42.5%;" data-dismiss="modal">Dismiss</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div> -->
 
   <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -359,6 +480,10 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
     }
 
     $(document).ready(() => {
+      // if (sha1(sha1('cescon@123')) == '<?php echo $userData[0]['password']; ?>') {
+      //   $('#default').modal({ show: true });
+      // }
+
       setInterval(() => {
         loadCampers();
         loadCount();
@@ -407,9 +532,23 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
       var new_password = $('#new_password').val();
       var conf_password = $('#conf_password').val();
 
+      var regex = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&\*])(?=.{8,})/);
+
       $('#conf_password').prop('value', "");
 
       if (new_password == "") {
+        $('#conf_password').prop('disabled', true);
+        allowsubmit.prop('disabled', true);
+      }
+      else if (new_password.length < 8) {
+        old_message.text("Password must be atleast 8 characters.");
+        old_warning.show();
+        $('#conf_password').prop('disabled', true);
+        allowsubmit.prop('disabled', true);
+      }
+      else if (!regex.test(new_password)) {
+        old_message.text("Password must contain at least 1 uppercase, 1 lowercase, 1 number, and 1 special character.");
+        old_warning.show();
         $('#conf_password').prop('disabled', true);
         allowsubmit.prop('disabled', true);
       }
@@ -444,6 +583,16 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
       }
     })
   </script>
+  <script>
+    function alphaOnly(event) {
+      var value = String.fromCharCode(event.which);
+      var pattern = new RegExp(/^[A-z ]{1,}$/);
+      return pattern.test(value);
+    };
+
+    $('#firstname').bind('keypress', alphaOnly);
+    $('#lastname').bind('keypress', alphaOnly);
+  </script>
   <?php 
     if (isset($_SESSION['2fa_success'])) {
       echo   '<script>
@@ -464,6 +613,42 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
                 });
               </script>';
     }
+
+    if (isset($_SESSION['user_validation'])) {
+      echo   '<script>
+                $("#addUser").modal({
+                    show: true,
+                });
+              </script>';
+    }
+    unset($_SESSION['user_validation']);
+
+    if (isset($_SESSION['reset_failed'])) {
+      echo   '<script>
+                $("#view_users").modal({
+                    show: true,
+                });
+              </script>';
+    }
+    unset($_SESSION['reset_failed']);
+
+    if (isset($_SESSION['reset_success'])) {
+      echo   '<script>
+                $("#view_users").modal({
+                    show: true,
+                });
+              </script>';
+    }
+    unset($_SESSION['reset_success']);
+
+    if (isset($_SESSION['user_success'])) {
+      echo   '<script>
+                $("#user_success").modal({
+                    show: true,
+                });
+              </script>';
+    }
+    unset($_SESSION['user_success']);    
 
     if (isset($_SESSION['2fa_failed'])) {
       echo   '<script>

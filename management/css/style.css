@@ -98,6 +98,10 @@ body{
   color:#333333;
 }
 
+.capitalize {
+  text-transform: capitalize;
+}
+
 /* Progress Bars */
 .progress-bar{
   background:#333333;

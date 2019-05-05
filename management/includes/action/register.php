@@ -1,23 +1,29 @@
 <?php 
+session_start();
 require_once('../config/db.php');
+require_once('../functions/user_validations.php');
 
 if(isset($_POST['register'])) {
     $firstname = $_POST['firstname'];
     $lastname = $_POST['lastname'];
     $contactno = $_POST['contactno'];
     $username = $_POST['username'];
-    $password = sha1(sha1($_POST['password']));
+    // $password = $_POST['password'];
     $accesstype = $_POST['accesstype'];
 
+    if (validate_all($firstname, $lastname, $contactno, $username, $accesstype)) {
+        $password = sha1(sha1($_POST['password']));
 
-    $query = "INSERT INTO users (firstname, lastname, contactno, username, password, accesstype) VALUES (?, ?, ?, ?, ?, ?)";
-    $stmt = $conn->prepare($query);
-    $stmt->bind_param('sssssi', $firstname, $lastname, $contactno, $username, $password, $accesstype);
-    if ($stmt->execute()) {
-        header('location: ../../index.php');
-    }
-    else {
-        echo $conn->error();
+        $query = "INSERT INTO users (firstname, lastname, contactno, username, accesstype) VALUES (?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param('sssss', $firstname, $lastname, $contactno, $username, $accesstype);
+        if ($stmt->execute()) {
+            $_SESSION['user_success'] = "User successfully added. ✔️ ";
+            header('location: ../../index.php');
+        }
+        else {
+            echo $conn->error();
+        }
     }
 }
 else {

@@ -2,7 +2,7 @@
 $time = $_SERVER['REQUEST_TIME'];
 
 // 30 min na timeout
-$timeout_duration = 900;
+$timeout_duration = 1800;
 
 // if nilampas nag 30min ang inactivity, then gubaon ang session tapos mag start nasad ug new session.
 if (isset($_SESSION['LAST_ACTIVITY']) && 
