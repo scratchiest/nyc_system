@@ -62,15 +62,15 @@ session_start();
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label>Email <span class="text-muted">(Optional)</span></label>
-                        <input type="email" class="form-control" name="email" placeholder="you@example.com">
+                        <label>Email</label>
+                        <input type="email" class="form-control" name="email" placeholder="you@example.com" required>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label>Contact Number <span class="text-muted">(Optional)</span></label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" name="contactno" placeholder="09123456789"
-                                >
+                        <label>Contact Number</label>
+                        <div class="input-group" style="margin-bottom: 15px;">
+                            <span class="input-group-addon" id="basic-addon1">+63</span>
+                            <input type="number" class="form-control" placeholder="9123456789" name="contactno" required>
                         </div>
                     </div>
                 </div>
@@ -81,12 +81,12 @@ session_start();
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Name of Church</label>
-                        <input type="text" class="form-control" name="churchname"
+                        <input type="text" class="form-control" placeholder="Name of Church" name="churchname"
                             required>
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>Church Address</label>
-                        <input type="text" class="form-control" name="churchaddress" required>
+                        <input type="text" class="form-control" placeholder="Address of Church" name="churchaddress" required>
                     </div>
                 </div>
 
@@ -120,8 +120,6 @@ session_start();
                     </div>
                     <div class="col-md-6 mb-3">
                         <label>Your church position</label>
-                        <!-- <input type="text" class="form-control" name="churchposition" placeholder="Member|Non-member|Staff(only for camp staffs)"
-                            required> -->
                         <select class="custom-select d-block w-100" name="churchposition" required>
                             <option value="" selected disabled>Member|Non-member|Staff(only for camp staffs)</option>
                             <option value="Member">Member</option>
@@ -137,22 +135,22 @@ session_start();
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label>Your pastor/leader name</label>
-                        <input type="text" class="form-control" name="pastorname">
+                        <input type="text" class="form-control" name="pastorname" placeholder="Name of pastor" required>
                     </div>
                     <div class="col-md-4 mb-3">
                         <label>Your pastor/leader contact number</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" name="pastorcontactno" placeholder="09123456789">
+                        <div class="input-group" style="margin-bottom: 15px;">
+                            <span class="input-group-addon" id="basic-addon1">+63</span>
+                            <input type="number" class="form-control" name="pastorcontactno" placeholder="9123456789" required>
                         </div>
                     </div>
                 </div>
 
                 <hr class="mb-4">
 
-                <h4 class="mb-3">Camp Attendance</h4>
+                <h4 class="mb-3">Camp Attendance <span class="text-muted">(No. of camps attended)</span></h4>
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label>No. of camps attended</label>
                         <div class="input-group">
                             <input type="number" class="form-control" min="0" name="campsattended" placeholder="If first time, put 0."
                                 required>
@@ -180,7 +178,6 @@ session_start();
                     <label style="font-size: 20px; margin-left: 20px; color: red;">Fish</label>
                 </div>
                 <input type="text" name="allergies" id="allergies" hidden>
-                <!-- <input type="number" name="groupnumber" id="groupnumber" hidden> -->
 
                 <hr class="mb-4">
 
@@ -201,19 +198,35 @@ session_start();
     </div>
     </div>
 
+    <div class="modal fade" id="error_msg" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-center" id="exampleModalLabel">Information</h5>
+                </div>
+                <div class="modal-body">
+                    <h4 class="text-center">Warning! You have one (or more) errors. Please consider the following: </h4>
+                    <?php 
+                        if (isset($_SESSION['error_msg'])) {
+                            foreach($_SESSION['error_msg'] as $error) {
+                                echo '<div class="alert alert-danger">• '.$error.'</div>';
+                            }
+                        }
+                    ?>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" style="margin-right: 42.5%;" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap core JavaScript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="resources/js/jquery-3.3.1.min.js"></script>
+    <script src="resources/js/popper.min.js"></script>
     <script src="resources/js/bootstrap.min.js"></script>
-    <script>
-        // $(document).ready(function () {
-        //     setInterval(() => {
-        //         var rand = Math.floor(Math.random() * 20) + 1;
-        //         $('#groupnumber').attr('value', rand);
-        //     }, 1000);
-        // })
-    </script>
     <script>
         $(document).ready(function () {
             var allergies = '';
@@ -267,6 +280,15 @@ session_start();
             }
         })
     </script>
+    <?php 
+        if (isset($_SESSION['error_msg'])) {
+            echo   '<script>
+                      $("#error_msg").modal({
+                          show: true
+                      });
+                    </script>';
+          }
+          unset($_SESSION['error_msg']);
+    ?>
 </body>
-
 </html>

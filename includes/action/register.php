@@ -1,6 +1,7 @@
 <?php 
 session_start();
 require_once('../config/db.php');
+require_once('../functions/reg_validations.php');
 
 if (isset($_POST['submit'])) {
     $name = $conn->real_escape_string($_POST['name']);
@@ -17,33 +18,39 @@ if (isset($_POST['submit'])) {
     $campsattended = $conn->real_escape_string($_POST['campsattended']);
     $allergies = $conn->real_escape_string($_POST['allergies']);
     $groupnumber = getGroupnumber($age);
-    
-    if ($churchposition == 'Staff') {
-        $query = "INSERT INTO staff VALUES ";
-        $query .= "(DEFAULT, '{$name}', {$age}, '{$gender}', '{$email}', '{$contactno}', '{$churchname}', '{$churchaddress}', '{$churchdistrict}', 
-                    '{$churchposition}', '{$pastorname}', '{$pastorcontactno}', {$campsattended}, '{$allergies}')";
-                    
-        if ($conn->query($query)) {
-            $_SESSION['success_msg'] = "You have successfully registered!";
-            header('location: ../../index.php');
+
+    if (validate_all($name, $age, $gender, $email, $contactno, $churchname, $churchaddress, $churchdistrict, $churchposition, $pastorname, $pastorcontactno, $campsattended, $allergies)) {
+        if ($churchposition == 'Staff') {
+            $query = "INSERT INTO staff VALUES ";
+            $query .= "(DEFAULT, '{$name}', {$age}, '{$gender}', '{$email}', '{$contactno}', '{$churchname}', '{$churchaddress}', '{$churchdistrict}', 
+                        '{$churchposition}', '{$pastorname}', '{$pastorcontactno}', {$campsattended}, '{$allergies}')";
+                        
+            if ($conn->query($query)) {
+                $_SESSION['success_msg'] = "You have successfully registered!";
+                header('location: ../../index.php');
+            }
+            else {
+                echo $query . '<br>' . $conn->error;
+            }
         }
         else {
-            echo $query . '<br>' . $conn->error;
+            $query = "INSERT INTO campers VALUES ";
+            $query .= "(DEFAULT, '{$name}', {$age}, '{$gender}', '{$email}', '{$contactno}', '{$churchname}', '{$churchaddress}', '{$churchdistrict}', 
+                        '{$churchposition}', '{$pastorname}', '{$pastorcontactno}', {$campsattended}, '{$allergies}', {$groupnumber}, 'Not Paid')";
+                        
+            if ($conn->query($query)) {
+                $_SESSION['success_msg'] = "You have successfully registered!";
+                header('location: groupleader.php?grp_no='.$groupnumber);
+            }
+            else {
+                echo $query . '<br>' . $conn->error;
+            }
         }
     }
-    else {
-        $query = "INSERT INTO campers VALUES ";
-        $query .= "(DEFAULT, '{$name}', {$age}, '{$gender}', '{$email}', '{$contactno}', '{$churchname}', '{$churchaddress}', '{$churchdistrict}', 
-                    '{$churchposition}', '{$pastorname}', '{$pastorcontactno}', {$campsattended}, '{$allergies}', {$groupnumber}, 'Not Paid')";
-                    
-        if ($conn->query($query)) {
-            $_SESSION['success_msg'] = "You have successfully registered!";
-            header('location: groupleader.php?grp_no='.$groupnumber);
-        }
-        else {
-            echo $query . '<br>' . $conn->error;
-        }
-    }
+    // var_dump($_POST);
+}
+else {
+    header('location: ../../index.php');
 }
 
 function getGroupnumber($age) {

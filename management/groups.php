@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once('includes/config/session.php');
-require_once('../includes/config/db.php');
+require_once('includes/config/db.php');
 
 $userData = '';
 

@@ -1,4 +1,5 @@
 <?php 
+date_default_timezone_set("Asia/Manila");
 session_start();
 require_once('../config/db.php');
 
@@ -13,7 +14,7 @@ if (isset($_POST['login'])) {
     $stmt->bind_param('ss', $username, $password);
     $stmt->execute();
     $result = $stmt->get_result();
-    if ($result->num_rows > 0) {
+    if ($result->num_rows > 0) {        
         while ($row = $result->fetch_assoc()) {
             $userData[] = $row;
         }
@@ -23,6 +24,17 @@ if (isset($_POST['login'])) {
         }
         else {
             header('location: ../../index.php');
+        }
+        // Check password date for expiry notification
+        $time = strtotime($userData[0]['password_updated_at']);
+        $date_now = date("Y-m-d H:i:s");
+        $final = date("Y-m-d H:i:s", strtotime("+1 month", $time));
+
+        if ($date_now >= $final) {
+            $_SESSION['password_warning'] = 
+            "Warning! Your password is a month old. You are required to change your password as soon possible.
+            <br>
+            To change your password, go to <strong>Settings</strong>, and click <strong>Change Password</strong>.";
         }
     }
     else {

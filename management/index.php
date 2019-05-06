@@ -2,7 +2,7 @@
 declare(strict_types = 1);
 session_start();
 require_once('includes/config/session.php');
-require_once('../includes/config/db.php');
+require_once('includes/config/db.php');
 require_once('vendor/autoload.php');
 require_once('includes/functions/GoogleAuthenticator.php');
 
@@ -53,6 +53,8 @@ if (isset($_GET['notpaid'])) {
 $secret = getSecret();
 $QRCode = \Sonata\GoogleAuthenticator\GoogleQrUrl::generate($userData[0]['username'], $secret, 'CESCon MS v2.0');
 $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
+
+// echo $g->getCode($secret);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -187,7 +189,7 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
             <?php 
               if (isset($_SESSION['user_validation'])) {
                 foreach ($_SESSION['user_validation'] as $error) {
-                  echo '<div class="alert alert-danger">'.$error.'</div>';
+                  echo '<div class="alert alert-danger text-center">'.$error.'</div>';
                 }
               }
             ?>
@@ -208,10 +210,6 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
               <label>Username</label>
               <input type="text" name="username" id="username" class="form-control" minlength="6" placeholder="Enter Username" required>
             </div>
-            <!-- <div class="form-group">
-              <label>Password</label>
-              <input type="password" name="password" id="password" class="form-control" minlength="8" maxlength="20" placeholder="Enter Password" required>
-            </div> -->
             <div class="form-group">
               <label>Access type</label>
               <select name="accesstype" class="form-control" required>
@@ -308,6 +306,7 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
     </div>
   </div>
 
+  <!-- Change pass -->
   <div class="modal fade" id="changepass" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -339,9 +338,9 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
             </div>
             <div class="form-group">
               <label>New Password</label>
-              <input type="password" name="new_password" pattern="(?=^.{8,}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s)[0-9a-zA-Z!@#$%^&*()]*$" id="new_password" minlength="8" class="form-control" placeholder="Enter New Password" required
-                title="Password must contain at least 1 uppercase, 1 lowercase, and 1 number."
-              >
+              <input type="password" name="new_password" pattern="(?=^.{8,}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s)[0-9a-zA-Z!@#$%^&*()]*$" 
+                id="new_password" minlength="8" class="form-control" placeholder="Enter New Password" required
+                title="Password must contain at least 1 uppercase, 1 lowercase, and 1 number." >
             </div>
             <div class="form-group">
               <label>Confirm Password</label>
@@ -357,6 +356,7 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
     </div>
   </div>
 
+  <!-- User success -->
   <div class="modal" id="user_success" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -385,18 +385,18 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
               ×
               </button>
-              <h4 class="modal-title text-centers" id="classModalLabel">
+              <h4 class="modal-title text-center" id="classModalLabel">
                   Users
               </h4>
           </div>
           <div class="modal-body">
               <?php 
-                if (isset($_SESSION['reset_failed'])) {
-                  echo '<div class="alert alert-danger text-center">'.$_SESSION['reset_failed'].'</div>';
+                if (isset($_SESSION['failed'])) {
+                  echo '<div class="alert alert-danger text-center">'.$_SESSION['failed'].'</div>';
                 }
 
-                if (isset($_SESSION['reset_success'])) {
-                  echo '<div class="alert alert-success text-center">'.$_SESSION['reset_success'].'</div>';
+                if (isset($_SESSION['success'])) {
+                  echo '<div class="alert alert-success text-center">'.$_SESSION['success'].'</div>';
                 }
               ?>
               <table class="table table-bordered">
@@ -430,7 +430,7 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
   </div>
 
   <!-- Password change warning -->
-  <!-- <div class="modal" id="default" tabindex="-1" role="dialog">
+  <div class="modal" id="password_warning" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -439,9 +439,11 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
         <div class="modal-body">
           <span id="warning">
             <h4 style="line-height: 25px;" class="text-center">
-              Warning! Your password is set to default. 
-              <br>
-              It is highly recommended to change it as soon as possible.
+            <?php 
+              if (isset($_SESSION['password_warning'])) {
+                echo $_SESSION['password_warning'];
+              }
+            ?>
             </h4>
           </span>
           <div class="modal-footer">
@@ -450,7 +452,7 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
         </div>
       </div>
     </div>
-  </div> -->
+  </div>
 
   <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -623,23 +625,23 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
     }
     unset($_SESSION['user_validation']);
 
-    if (isset($_SESSION['reset_failed'])) {
+    if (isset($_SESSION['failed'])) {
       echo   '<script>
                 $("#view_users").modal({
                     show: true,
                 });
               </script>';
     }
-    unset($_SESSION['reset_failed']);
+    unset($_SESSION['failed']);
 
-    if (isset($_SESSION['reset_success'])) {
+    if (isset($_SESSION['success'])) {
       echo   '<script>
                 $("#view_users").modal({
                     show: true,
                 });
               </script>';
     }
-    unset($_SESSION['reset_success']);
+    unset($_SESSION['success']);
 
     if (isset($_SESSION['user_success'])) {
       echo   '<script>
@@ -667,6 +669,15 @@ $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
               </script>';
     }
     unset($_SESSION['changepass_failed']);
+
+    if (isset($_SESSION['password_warning'])) {
+      echo   '<script>
+                $("#password_warning").modal({
+                    show: true
+                });
+              </script>';
+    }
+    unset($_SESSION['password_warning']);
   ?>
 </body>
 </html>

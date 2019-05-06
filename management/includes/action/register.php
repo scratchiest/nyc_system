@@ -8,21 +8,18 @@ if(isset($_POST['register'])) {
     $lastname = $_POST['lastname'];
     $contactno = $_POST['contactno'];
     $username = $_POST['username'];
-    // $password = $_POST['password'];
     $accesstype = $_POST['accesstype'];
 
     if (validate_all($firstname, $lastname, $contactno, $username, $accesstype)) {
-        $password = sha1(sha1($_POST['password']));
-
         $query = "INSERT INTO users (firstname, lastname, contactno, username, accesstype) VALUES (?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($query);
         $stmt->bind_param('sssss', $firstname, $lastname, $contactno, $username, $accesstype);
         if ($stmt->execute()) {
-            $_SESSION['user_success'] = "User successfully added. ✔️ ";
+            $_SESSION['user_success'] = "User successfully added. ✔️";
             header('location: ../../index.php');
         }
         else {
-            echo $conn->error();
+            echo $conn->error;
         }
     }
 }

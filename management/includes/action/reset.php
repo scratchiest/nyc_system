@@ -17,13 +17,12 @@ function checkIfExists($id) {
 
 if (isset($_GET['id'])) {
     $id = $conn->real_escape_string($_GET['id']);
-    $new_password = sha1(sha1('Staff@123'));
 
     if (is_numeric($id)) {
         if (checkIfExists($id)) {
-            $query = "UPDATE users SET password = '{$new_password}' WHERE user_id = {$id}";
+            $query = "UPDATE users SET password = DEFAULT WHERE user_id = {$id}";
             if ($conn->query($query)) {
-                $_SESSION['reset_success'] = "Password Reset Successful.";
+                $_SESSION['success'] = "Password Reset Successful.";
                 header('location: ../../index.php');
             }
             else {
@@ -31,12 +30,12 @@ if (isset($_GET['id'])) {
             }
         }
         else {
-            $_SESSION['reset_failed'] = 'Password Reset Failed (Error: The provided user ID does not exist.)';
+            $_SESSION['failed'] = 'Password Reset Failed (Error: The provided user ID does not exist.)';
             header('location: ../../index.php');
         }
     }
     else {
-        $_SESSION['reset_failed'] = 'Password Reset Failed (Error: The provided user ID is invalid.)';
+        $_SESSION['failed'] = 'Password Reset Failed (Error: The provided user ID is invalid.)';
         header('location: ../../index.php');
     }
 }

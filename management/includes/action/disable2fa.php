@@ -5,6 +5,8 @@ require_once('../../vendor/autoload.php');
 
 $userData = $_SESSION['user_session'];
 
+$name = $userData[0]['firstname'].' '.$userData[0]['lastname'];
+
 if (isset($_POST['disable'])) {
     $query = "UPDATE users SET 2FA = 'DISABLED' WHERE user_id = {$userData[0]['user_id']}";
     if ($conn->query($query)) {

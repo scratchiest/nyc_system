@@ -1,9 +1,25 @@
 <?php 
+require_once('../config/db.php');
+
 $errors = array();
 
 function resetSession($new_errors) {
     $_SESSION['user_validation'] = $new_errors;
 }
+
+function checkIfExists($username) {
+    global $conn;
+
+    $query = "SELECT user_id FROM users WHERE username = '{$username}'";
+    $result = $conn->query($query);
+    if ($result->num_rows > 0) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 
 function validate_all($firstname, $lastname, $contactno, $username, $accesstype) {
     $first = validate_firstname($firstname);
@@ -121,6 +137,11 @@ function validate_username($username) {
     }
     else if ($username != strip_tags($username)) {
         array_push($errors, "Username contains invalid characters.");
+        resetSession($errors);
+        header('location: ../../index.php');
+    }
+    else if (checkIfExists($username)) {
+        array_push($errors, "Username exists in the database.");
         resetSession($errors);
         header('location: ../../index.php');
     }

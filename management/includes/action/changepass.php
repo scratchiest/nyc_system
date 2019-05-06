@@ -30,7 +30,7 @@ if (isset($_POST['changepass'])) {
                     if (!strcmp($new_password, $curr_password) == 0) {
                         if (strcmp($new_password, $conf_password) == 0) {
                             $new_password = sha1(sha1($new_password));
-                            $query = "UPDATE users SET password = '{$new_password}' WHERE user_id = {$userData[0]['user_id']}";
+                            $query = "UPDATE users SET password = '{$new_password}', 2FA = 'DISABLED', password_updated_at = CURRENT_TIMESTAMP WHERE user_id = {$userData[0]['user_id']}";
                             if ($conn->query($query)) {
                                 $_SESSION['changepass_success'] = "Password successfully changed. ✔️". "<br>" . "Click <a href='includes/action/logout.php'>Here</a> to re-login.";
                                 header('location: ../../index.php');

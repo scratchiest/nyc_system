@@ -10,9 +10,7 @@ $userData = $_SESSION['user_session'];
 $g = new \Sonata\GoogleAuthenticator\GoogleAuthenticator();
 $secret = getSecret();
 
-echo $secret;
-echo '</br>';
-echo $g->getCode($secret);
+$name = $userData[0]['firstname'].' '.$userData[0]['lastname'];
 
 if (isset($_POST['enable'])) {
     $code = $_POST['code'];
